@@ -1,18 +1,21 @@
 var mongoose = require('mongoose');
 
 var userDataSchema = new mongoose.Schema({
-    'drug-name': {
+    'user_name': {
         type: String
     },
-    'side-effects': {
+    'img': {
         type: String
     },
-    'dosage': {
+    'age': {
         type: String
     },
-    'when-ntb-taken': {
-        type: String
-    }
+    'preferences': [{
+        'title': {type: String},
+        'img': {type: String},
+        'timing': {type: String},
+        'duration': {type: String}
+    }]
 })
 
 var UserData = mongoose.model('UserData', userDataSchema);

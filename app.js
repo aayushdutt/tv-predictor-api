@@ -10,6 +10,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 app.use('/', indexRouter);
-app.use('/userData', userDataRouter);
+app.use('/api', userDataRouter);
 
 module.exports = app;

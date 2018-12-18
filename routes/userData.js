@@ -1,44 +1,36 @@
-var express = require('express');
+var express = require("express");
 var router = express.Router();
-var db = require('../models');
-
+var db = require("../models");
 
 /* GET user data. */
-router.get('/', function(req, res, next) {
-	db.UserData.find()
-		.then(function(userData) {
-		userData = userData.reverse();
-		res.json(userData);
-		})
-		.catch(function(err) {
-			res.send(err);
-	})
-});
+router.post("/find", function(req, res, next) {
+  let img = req.body.img;
 
+  // send the image to API and find which one matches
+  let id = ""; // fill it with id
+  db.UserData.find({ __id: id })
+    .then(function(userData) {
+      if (userData.length === 0) {
+        return res.json({ err: "couldn't find any user" });
+      }
+      return res.json(userData);
+    })
+    .catch(function(err) {
+      return res.send(err);
+    });
+});
 
 /* POST user data. */
-router.post('/', function(req, res, next) {
-	console.log("Request Recieved: ", req.body)
-	db.UserData.find()
-	.then(function(userData) {
-		const badJson = req.body.ocr
-		var correctJson = badJson.replace(/(['"])?([a-z0-9A-Z_]+)(['"])?:/g, '"$2": ');
-		const ocrArr = JSON.parse(correctJson)
-		// userData.forEach(o => {
-		// 	ocrArr.forEach(scannedOcr => {
-		// 	if(
-		// 		o["drug-name"].toLowerCase().startsWith(scannedOcr.toLowerCase())  || 
-		// 		scannedOcr.toLowerCase().startsWith(o["drug-name"].toLowerCase())
-		// 	)
-		// 		return res.json(o);
-		// 	})
-		// })
-		return res.json({null: null})
-	})
-	.catch(function(err) {
-		res.send(err);
-	})
-});
+router.post("/create", function(req, res, next) {
+  let data = req.body.data;
 
+  db.UserData.create(data)
+    .then(function(msg) {
+      return res.json({ success: true });
+    })
+    .catch(function(err) {
+      res.json({ success: false });
+    });
+});
 
 module.exports = router;
