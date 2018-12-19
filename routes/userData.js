@@ -11,22 +11,32 @@ const GENERATE_ID_URL =
 const MATCH_ID_URL =
   "https://westcentralus.api.cognitive.microsoft.com/face/v1.0/findsimilars";
 
-//Image storage
-// const multer = require("multer");
-// const cloudinary = require("cloudinary");
-// const cloudinaryStorage = require("multer-storage-cloudinary");
+// HELPERS
+function generateId(imgUrl, callback) {
+  let headers = {
+    "Content-Type": "application/json",
+    "Ocp-Apim-Subscription-Key": faceAPIKey
+  };
 
-// cloudinary.config(cloudinaryConfiguration);
-// console.log("cloud name=", cloudinaryConfiguration.cloud_name);
+  var options = {
+    method: "POST",
+    url: GENERATE_ID_URL,
+    body: JSON.stringify({ url: imgUrl }),
+    headers
+  };
 
-// const storage = cloudinaryStorage({
-//   cloudinary: cloudinary,
-//   folder: "demo",
-//   allowedFormats: ["jpg", "png"],
-//   transformation: [{ width: 500, height: 500, crop: "limit" }]
-// });
-
-// const parser = multer({ storage: storage });
+  request(options, function(err, response, body) {
+    // SENDS REQUEST TO CREATE ID
+    if (!err) {
+      var info = JSON.parse(body);
+      console.log("successfully created faceId", info);
+      return callback(info[0].faceId);
+    } else {
+      console.log("unsuccessful attempt to create ID");
+      console.log(err);
+    }
+  });
+}
 
 // ------------------ROUTES------------------
 /* GET user data. */
@@ -49,56 +59,24 @@ router.post("/find", function(req, res, next) {
 
 /* POST user data. */
 router.post("/create", function(req, res, next) {
-  let data = req.body.data;
+  let data = { ...req.body };
   let imgUrl =
     "https://cdn.images.express.co.uk/img/dynamic/galleries/x701/389530.jpg";
 
-  let headers = {
-    "Content-Type": "application/json",
-    "Ocp-Apim-Subscription-Key": faceAPIKey
-  };
-
   let bodyData = { url: imgUrl };
 
-  var options = {
-    method: "POST",
-    url: GENERATE_ID_URL,
-    body: JSON.stringify(bodyData),
-    headers
-  };
-
-  request(options, function(err, response, body) {
-    if (!err) {
-      var info = JSON.parse(body);
-      console.log("success");
-      return res.json(info);
-    } else {
-      console.log("error is there");
-      console.log(err);
-    }
+  generateId(imgUrl, function(faceId) {
+    data.faceId = faceId;
+    db.UserData.create(data)
+      .then(function(newData) {
+        // STORE USER DATA WITH ID
+        console.log(newData);
+        return res.json(newData);
+      })
+      .catch(function(err) {
+        return res.json({ success: false });
+      });
   });
-
-  // db.UserData.create(data)
-  //   .then(function(msg) {
-  //     return res.json({ success: true });
-  //   })
-  //   .catch(function(err) {
-  //     res.json({ success: false });
-  // });
 });
-
-// ===============TEST===============
-
-// router.post("/test", parser.single("image"), (req, res) => {
-//   console.log(JSON.stringify(req.body, null, 4));
-//   // console.log(req.body); // to see what is returned to you
-//   // const image = {};
-//   // image.url = req.file.url;
-//   // image.id = req.file.public_id;
-
-//   // Image.create(image) // save image information in database
-//   //   .then(newImage => res.json(newImage))
-//   //   .catch(err => console.log(err));
-// });
 
 module.exports = router;
