@@ -62,3 +62,6 @@ typings/
 node_modules/
 keys_dev.js
 backup/
+
+# Custom
+notes.md
