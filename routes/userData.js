@@ -38,23 +38,63 @@ function generateId(imgUrl, callback) {
   });
 }
 
+function getMatchingId(faceId, faceIds, callback) {
+  let headers = {
+    "Content-Type": "application/json",
+    "Ocp-Apim-Subscription-Key": faceAPIKey
+  };
+
+  let requestBody = {
+    faceId,
+    faceIds,
+    maxNumOfCandidatesReturned: 1
+  };
+
+  var options = {
+    method: "POST",
+    url: MATCH_ID_URL,
+    body: JSON.stringify(requestBody),
+    headers
+  };
+
+  request(options, function(err, response, body) {
+    // SENDS REQUEST TO CREATE ID
+    if (!err) {
+      var info = JSON.parse(body);
+      console.log("Info is: ", info);
+      return callback(info[0].faceId);
+    } else {
+      console.log("unsuccessful attempt to match ID");
+      console.log(err);
+    }
+  });
+}
+
 // ------------------ROUTES------------------
 /* GET user data. */
 router.post("/find", function(req, res, next) {
-  let img = req.body.img;
+  let imgUrl =
+    "https://cdn.images.express.co.uk/img/dynamic/galleries/x701/389530.jpg";
 
-  // send the image to API and find which one matches
-  let id = ""; // fill it with id
-  db.UserData.find({ __id: id })
-    .then(function(userData) {
-      if (userData.length === 0) {
-        return res.json({ err: "couldn't find any user" });
-      }
-      return res.json(userData);
-    })
-    .catch(function(err) {
-      return res.send(err);
-    });
+  generateId(imgUrl, function(currFaceId) {
+    db.UserData.find()
+      .then(allUsers => {
+        let faceIds = [];
+        allUsers.forEach(user => {
+          faceIds.push(user.faceId);
+        });
+        console.log(faceIds);
+
+        getMatchingId(currFaceId, faceIds, function(matchingId) {
+          db.UserData.findOne({ faceId: matchingId })
+            .then(user => {
+              res.json(user);
+            })
+            .catch(err => console.log(err));
+        });
+      })
+      .catch(err => console.log(err));
+  });
 });
 
 /* POST user data. */
@@ -62,8 +102,6 @@ router.post("/create", function(req, res, next) {
   let data = { ...req.body };
   let imgUrl =
     "https://cdn.images.express.co.uk/img/dynamic/galleries/x701/389530.jpg";
-
-  let bodyData = { url: imgUrl };
 
   generateId(imgUrl, function(faceId) {
     data.faceId = faceId;
