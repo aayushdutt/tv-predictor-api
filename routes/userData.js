@@ -1,10 +1,9 @@
 var express = require("express");
 var router = express.Router();
-var axios = require("axios");
 var request = require("request");
 var db = require("../models");
 var keys = require("../config/keys");
-var { cloudinaryConfiguration, faceAPIKey } = keys;
+var { faceAPIKey } = keys;
 
 const GENERATE_ID_URL =
   "https://westcentralus.api.cognitive.microsoft.com/face/v1.0/detect";
